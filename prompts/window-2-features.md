@@ -14,7 +14,7 @@ Expected structure:
 src/
 ├── config.ts          # Typed env config
 ├── types/index.ts     # FAQ, Event, Resource, TeamMember interfaces
-├── data/              # faqs.ts, events.ts, resources.ts, team.ts, constants.ts
+├── data/              # faqs.ts, events.ts, reso think there's not too much family real good thank you don't still forgive me good morning urces.ts, team.ts, constants.ts
 ├── services/          # claude.ts, faq-matcher.ts, event-tracker.ts, rate-limiter.ts
 ├── utils/             # embeds.ts (createCCKEmbed + COLORS), format.ts, logger.ts
 ├── index.ts           # Discord client setup (minimal)
