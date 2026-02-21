@@ -24,9 +24,10 @@ export async function deployCommands(
   }
 }
 
-// Window 2 will import and call deployCommands() with actual command definitions.
-// When run directly, deploy an empty command set (useful for clearing commands).
 const isDirectRun = process.argv[1]?.includes("deploy-commands");
 if (isDirectRun) {
-  deployCommands([]).catch(() => process.exit(1));
+  import("./commands/index.js").then(({ commands }) => {
+    const commandData = [...commands.values()].map((cmd) => cmd.data.toJSON());
+    deployCommands(commandData).catch(() => process.exit(1));
+  });
 }
