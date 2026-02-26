@@ -1,13 +1,8 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { config } from "../config.js";
 import { faqs } from "../data/faqs.js";
+import { BOT } from "../data/constants.js";
 import type { FAQ } from "../types/index.js";
 import { logger } from "../utils/logger.js";
-
-const client = new Anthropic({
-  apiKey: config.anthropic.apiKey,
-  maxRetries: 2,
-});
+import { getAnthropicClient } from "./claude.js";
 
 export function listFAQs(category?: string): FAQ[] {
   if (!category) return faqs;
@@ -38,9 +33,10 @@ export async function searchFAQs(query: string): Promise<FAQ | undefined> {
       .map((faq, i) => `${i}. [${faq.category}] ${faq.question}`)
       .join("\n");
 
+    const client = getAnthropicClient();
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 32,
+      max_tokens: BOT.MAX_TOKENS_FAQ_MATCH,
       system:
         "You match user questions to FAQ entries. Respond with ONLY the FAQ index number (0-based) that best matches, or 'none' if no match. No explanation.",
       messages: [

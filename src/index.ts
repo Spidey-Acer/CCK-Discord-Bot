@@ -48,6 +48,16 @@ client.on("guildMemberAdd", (member) => {
   });
 });
 
+// Graceful shutdown
+function shutdown(signal: string): void {
+  logger.info(`Received ${signal}, shutting down gracefully...`);
+  client.destroy();
+  process.exit(0);
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+
 client.login(config.discord.token).catch((error: unknown) => {
   logger.error("Failed to login", {
     error: error instanceof Error ? error.message : String(error),

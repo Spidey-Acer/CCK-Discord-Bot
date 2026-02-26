@@ -10,9 +10,8 @@ import {
 import { resources } from "../data/resources.js";
 import { createCCKEmbed, Colors } from "../utils/embeds.js";
 import { sanitizeInput } from "../utils/sanitize.js";
+import { BOT } from "../data/constants.js";
 import type { Command } from "./index.js";
-
-const ITEMS_PER_PAGE = 5;
 
 function getCategories(): string[] {
   return [...new Set(resources.map((r) => r.category))];
@@ -60,12 +59,12 @@ export const resourcesCommand: Command = {
       }
 
       const page = 0;
-      const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+      const totalPages = Math.ceil(filtered.length / BOT.ITEMS_PER_PAGE);
       const title = category ? `Resources — ${category}` : "All Resources";
 
       const buildEmbed = (p: number) => {
-        const start = p * ITEMS_PER_PAGE;
-        const pageItems = filtered.slice(start, start + ITEMS_PER_PAGE);
+        const start = p * BOT.ITEMS_PER_PAGE;
+        const pageItems = filtered.slice(start, start + BOT.ITEMS_PER_PAGE);
         return createCCKEmbed({
           title,
           description: pageItems
@@ -101,7 +100,7 @@ export const resourcesCommand: Command = {
 
       const collector = reply.createMessageComponentCollector({
         componentType: ComponentType.Button,
-        time: 15 * 60_000,
+        time: BOT.PAGINATION_TIMEOUT_MS,
       });
 
       collector.on("collect", async (btn) => {

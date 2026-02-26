@@ -11,16 +11,16 @@ import { listFAQs, searchFAQs } from "../services/faq-matcher.js";
 import { createCCKEmbed, Colors } from "../utils/embeds.js";
 import { sanitizeInput } from "../utils/sanitize.js";
 import { logger } from "../utils/logger.js";
+import { BOT } from "../data/constants.js";
 import type { FAQ } from "../types/index.js";
 import type { Command } from "./index.js";
 
 const FAQ_CATEGORIES = ["general", "events", "technical"] as const;
-const ITEMS_PER_PAGE = 5;
 
 function buildFaqEmbed(faqList: FAQ[], page: number, title: string) {
-  const totalPages = Math.ceil(faqList.length / ITEMS_PER_PAGE);
-  const start = page * ITEMS_PER_PAGE;
-  const pageFaqs = faqList.slice(start, start + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(faqList.length / BOT.ITEMS_PER_PAGE);
+  const start = page * BOT.ITEMS_PER_PAGE;
+  const pageFaqs = faqList.slice(start, start + BOT.ITEMS_PER_PAGE);
 
   const embed = createCCKEmbed({
     title,
@@ -105,7 +105,7 @@ export const faqCommand: Command = {
 
       const collector = reply.createMessageComponentCollector({
         componentType: ComponentType.Button,
-        time: 15 * 60_000,
+        time: BOT.PAGINATION_TIMEOUT_MS,
       });
 
       collector.on("collect", async (btn) => {

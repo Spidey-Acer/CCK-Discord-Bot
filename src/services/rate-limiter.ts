@@ -1,16 +1,16 @@
 import { config } from "../config.js";
+import { BOT } from "../data/constants.js";
 
 interface RateLimitEntry {
   timestamps: number[];
 }
 
-const WINDOW_MS = 60_000; // 1 minute window
 const store = new Map<string, RateLimitEntry>();
 
 function cleanupExpired(): void {
   const now = Date.now();
   for (const [key, entry] of store) {
-    entry.timestamps = entry.timestamps.filter((t) => now - t < WINDOW_MS);
+    entry.timestamps = entry.timestamps.filter((t) => now - t < BOT.RATE_LIMIT_WINDOW_MS);
     if (entry.timestamps.length === 0) {
       store.delete(key);
     }
@@ -18,7 +18,7 @@ function cleanupExpired(): void {
 }
 
 // Run cleanup every 5 minutes
-setInterval(cleanupExpired, 5 * 60_000).unref();
+setInterval(cleanupExpired, BOT.RATE_LIMIT_CLEANUP_MS).unref();
 
 export function checkRateLimit(userId: string, type: "ask" | "general"): boolean {
   const limit = type === "ask" ? config.rateLimits.ask : config.rateLimits.general;
@@ -32,7 +32,7 @@ export function checkRateLimit(userId: string, type: "ask" | "general"): boolean
   }
 
   // Filter to only timestamps within the window
-  entry.timestamps = entry.timestamps.filter((t) => now - t < WINDOW_MS);
+  entry.timestamps = entry.timestamps.filter((t) => now - t < BOT.RATE_LIMIT_WINDOW_MS);
 
   if (entry.timestamps.length >= limit) {
     return false; // Rate limited
@@ -50,6 +50,6 @@ export function getRemainingUses(userId: string, type: "ask" | "general"): numbe
   const entry = store.get(key);
   if (!entry) return limit;
 
-  const recent = entry.timestamps.filter((t) => now - t < WINDOW_MS);
+  const recent = entry.timestamps.filter((t) => now - t < BOT.RATE_LIMIT_WINDOW_MS);
   return Math.max(0, limit - recent.length);
 }

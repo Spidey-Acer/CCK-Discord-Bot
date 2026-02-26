@@ -4,8 +4,10 @@ import { searchFAQs } from "../services/faq-matcher.js";
 import { checkRateLimit } from "../services/rate-limiter.js";
 import { createCCKEmbed, Colors } from "../utils/embeds.js";
 import { truncateText } from "../utils/format.js";
+import { detectComplexity } from "../utils/complexity.js";
 import { sanitizeInput, containsInjection } from "../utils/sanitize.js";
 import { logger } from "../utils/logger.js";
+import { BOT } from "../data/constants.js";
 
 export async function handleMessageCreate(message: Message, client: Client<true>): Promise<void> {
   if (message.author.bot) return;
@@ -44,23 +46,33 @@ export async function handleMessageCreate(message: Message, client: Client<true>
       await message.channel.sendTyping();
     }
 
-    const complexity = question.split(/\s+/).length <= 8 ? "simple" as const : "complex" as const;
+    // Search FAQ first (cheaper) — skip full Claude call if a direct match exists
+    const matchedFaq = await searchFAQs(question);
+
+    if (matchedFaq) {
+      const embed = createCCKEmbed({
+        title: "Claude Response",
+        description: matchedFaq.answer,
+        color: Colors.GREEN,
+      });
+      embed.addFields({
+        name: "📋 Matched FAQ",
+        value: `**${matchedFaq.question}**`,
+      });
+      embed.setFooter({ text: `CCK Bot • FAQ match` });
+      await message.reply({ embeds: [embed] });
+      return;
+    }
+
+    const complexity = detectComplexity(question);
     const result = await askClaude(question, complexity);
-    const content = truncateText(result.content, 1900);
+    const content = truncateText(result.content, BOT.MAX_RESPONSE_LENGTH);
 
     const embed = createCCKEmbed({
       title: "Claude Response",
       description: content,
       color: Colors.GREEN,
     });
-
-    const matchedFaq = await searchFAQs(question);
-    if (matchedFaq) {
-      embed.addFields({
-        name: "Related FAQ",
-        value: `**${matchedFaq.question}**\n${truncateText(matchedFaq.answer, 200)}`,
-      });
-    }
 
     embed.setFooter({ text: `CCK Bot • ${result.model}` });
     await message.reply({ embeds: [embed] });

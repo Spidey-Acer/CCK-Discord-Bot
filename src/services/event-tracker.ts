@@ -19,7 +19,11 @@ export function getNextEvent(): Event | undefined {
 }
 
 export function getDaysUntilEvent(event: Event): number {
-  const eventDate = new Date(event.date + "T00:00:00");
+  // Use explicit EAT timezone (+03:00) to avoid server-timezone drift
+  const eventMidnight = new Date(event.date + "T00:00:00+03:00");
   const now = new Date();
-  return Math.ceil((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const diffMs = eventMidnight.getTime() - now.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  // Use Math.ceil so "day of" = 0 and "tomorrow" = 1
+  return Math.ceil(diffDays);
 }
